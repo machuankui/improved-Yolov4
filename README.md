@@ -52,14 +52,7 @@ torch==1.2.0
 
 小箱梁施工进度Label database可在百度网盘中下载。
 链接:https://pan.baidu.com/s/1jHmfAAy7F9YEXQd8Ss4Zsw 提取码: lwd4 
-
-
-VOC数据集下载地址如下：  
-VOC2007+2012训练集    
-链接: https://pan.baidu.com/s/16pemiBGd-P9q2j7dZKGDFA 提取码: eiw9    
-
-VOC2007测试集   
-链接: https://pan.baidu.com/s/1BnMiFwlNwIWG9gsd4jHLig 提取码: dsda   
+ 
 
 ## 预测步骤
 ### a、使用预训练权重
