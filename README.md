@@ -1,4 +1,4 @@
-## YOLOV4：You Only Look Once目标检测模型在pytorch当中的实现
+## YOLOV4：目标检测模型在pytorch当中的实现
 ---
 ##本文根据YOLOv4进行改进网络结构，针对小箱梁施工进度进行识别，
 
