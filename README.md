@@ -1,40 +1,33 @@
 ## YOLOV4：You Only Look Once目标检测模型在pytorch当中的实现
 ---
+##本文根据YOLOv4进行改进网络结构，针对小箱梁施工进度进行识别，
 
-**2021年2月7日更新：**   
-**加入letterbox_image的选项，关闭letterbox_image后网络的map得到大幅度提升。**
+**2021年11月1日更新：**   
+##在原代码基础上进行了网络结构改进，并创建小箱梁施工进度数据集，
 
 ## 目录
-1. [性能情况 Performance](#性能情况)
-2. [实现的内容 Achievement](#实现的内容)
-3. [所需环境 Environment](#所需环境)
-4. [注意事项 Attention](#注意事项)
-5. [小技巧的设置 TricksSet](#小技巧的设置)
-6. [文件下载 Download](#文件下载)
-7. [预测步骤 How2predict](#预测步骤)
-8. [训练步骤 How2train](#训练步骤)
-9. [评估步骤 How2eval](#评估步骤)
-10. [参考资料 Reference](#Reference)
-
-## 性能情况
-| 训练数据集 | 权值文件名称 | 测试数据集 | 输入图片大小 | mAP 0.5:0.95 | mAP 0.5 |
-| :-----: | :-----: | :------: | :------: | :------: | :-----: |
-| VOC07+12+COCO | [yolo4_voc_weights.pth](https://github.com/bubbliiiing/yolov4-pytorch/releases/download/v1.0/yolo4_voc_weights.pth) | VOC-Test07 | 416x416 | - | 89.0 
-| COCO-Train2017 | [yolo4_weights.pth](https://github.com/bubbliiiing/yolov4-pytorch/releases/download/v1.0/yolo4_weights.pth) | COCO-Val2017 | 416x416 | 46.1 | 70.2 
-
+1. [实现的内容 Achievement](#实现的内容)
+2. [所需环境 Environment](#所需环境)
+3. [注意事项 Attention](#注意事项)
+4. [小技巧的设置 TricksSet](#小技巧的设置)
+5. [文件下载 Download](#文件下载)
+6. [预测步骤 How2predict](#预测步骤)
+7. [训练步骤 How2train](#训练步骤)
+8. [评估步骤 How2eval](#评估步骤)
+9. [参考资料 Reference](#Reference)
 
 ## 实现的内容
 - [x] 主干特征提取网络：DarkNet53 => CSPDarkNet53
 - [x] 特征金字塔：SPP，PAN
-- [x] 训练用到的小技巧：Mosaic数据增强、Label Smoothing平滑、CIOU、学习率余弦退火衰减
+- [x] 训练用到的小技巧：Mosaic数据增强、Label Smoothing平滑、CIOU、学习率余弦退火衰减、迁移学习
 - [x] 激活函数：使用Mish激活函数
-- [ ] ……balabla
+- [ ] 等等等..
 
-## 所需环境
+## 改进Yolov4运行所需环境
 torch==1.2.0
 
 ## 注意事项
-代码中的yolo4_weights.pth是基于608x608的图片训练的，但是由于显存原因。我将代码中的图片大小修改成了416x416。有需要的可以修改回来。 代码中的默认anchors是基于608x608的图片的。   
+代码中的yolo4_weights.pth是基于608x608的图片训练的，根据个人显存，、代码中的图片大小可以修改成了416x416。有需要的可以修改回来。 代码中的默认anchors是基于608x608的图片的。   
 **注意不要使用中文标签，文件夹中不要有空格！**   
 **在训练前需要务必在model_data下新建一个txt文档，文档中输入需要分的类，在train.py中将classes_path指向该文件**。  
 
@@ -44,11 +37,22 @@ torch==1.2.0
 2、Cosine_scheduler可用于控制是否使用学习率余弦退火衰减。   
 3、label_smoothing可用于控制是否Label Smoothing平滑。
 
+##网络结构改变：
+1.将76×76的PANet层进行卷积并进行上采样，从而使它的大小为152×152，然后将上采样后的特征层和CSPDarknet53的152×152输出层进行张量拼接，最后将其输出到Yolo-Head模块进行输出
+2.借鉴原始Yolov4算法中卷积层的设计思想，将CSPDarknet53输出的特征层P2、P3、P4后的一个卷积层增加为三个卷积层，卷积核分别为1×1、3×3、1×1。
+
+##使用k-means++聚类算法将聚类方法
+
 ## 文件下载
 训练所需的yolo4_weights.pth可在百度网盘中下载。  
-链接: https://pan.baidu.com/s/1WlDNPtGO1pwQbqwKx1gRZA 提取码: p4sc  
-yolo4_weights.pth是coco数据集的权重。  
-yolo4_voc_weights.pth是voc数据集的权重。
+链接:https://pan.baidu.com/s/1jHmfAAy7F9YEXQd8Ss4Zsw 提取码: lwd4 
+
+小箱梁施工进度Image database可在百度网盘中下载。
+链接:https://pan.baidu.com/s/1jHmfAAy7F9YEXQd8Ss4Zsw 提取码: lwd4 
+
+小箱梁施工进度Label database可在百度网盘中下载。
+链接:https://pan.baidu.com/s/1jHmfAAy7F9YEXQd8Ss4Zsw 提取码: lwd4 
+
 
 VOC数据集下载地址如下：  
 VOC2007+2012训练集    
@@ -59,7 +63,7 @@ VOC2007测试集
 
 ## 预测步骤
 ### a、使用预训练权重
-1. 下载完库后解压，在百度网盘下载yolo4_weights.pth或者yolo4_voc_weights.pth，放入model_data，运行predict.py，输入  
+1. 下载完库后解压，在百度网盘下载yolo4_weights.pth，运行predict.py，输入  
 ```python
 img/street.jpg
 ```
@@ -91,7 +95,7 @@ img/street.jpg
 4. 在训练前利用voc2yolo4.py文件生成对应的txt。  
 5. 再运行根目录下的voc_annotation.py，运行前需要将classes改成你自己的classes。**注意不要使用中文标签，文件夹中不要有空格！**   
 ```python
-classes = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
+classes = ["entering beam", "lifting beam", "installing beam", "completed beam", "cranes", "mixer truck entering", "mixer truck working", "mixer truck leaveing"]
 ```
 6. 此时会生成对应的2007_train.txt，每一行对应其**图片位置**及其**真实框的位置**。  
 7. **在训练前需要务必在model_data下新建一个txt文档，文档中输入需要分的类，在train.py中将classes_path指向该文件**，示例如下：   
@@ -100,8 +104,10 @@ classes_path = 'model_data/new_classes.txt'
 ```
 model_data/new_classes.txt文件内容为：   
 ```python
-cat
-dog
+entering beam
+lifting beam
+installing beam
+completed beam
 ...
 ```
 8. 运行train.py即可开始训练。
@@ -123,6 +129,4 @@ get_map文件克隆自https://github.com/Cartucho/mAP
 具体mAP计算过程可参考：https://www.bilibili.com/video/BV1zE411u7Vw
 
 ## Reference
-https://github.com/qqwweee/keras-yolo3/  
-https://github.com/Cartucho/mAP  
-https://github.com/Ma-Dan/keras-yolo4  
+https://github.com/bubbliiiing/yolov4-pytorch
